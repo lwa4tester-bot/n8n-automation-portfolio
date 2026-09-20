@@ -1,0 +1,95 @@
+{
+  "name": "01 - Webhook Age Calculator",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "97ce6149-03a5-4c49-bb03-5ff4980bbade",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "51f9959c-c9c4-4612-b15e-235a67314c77",
+      "name": "Webhook",
+      "webhookId": "97ce6149-03a5-4c49-bb03-5ff4980bbade"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c0df411b-a6ae-43ff-a63a-83e04f423384",
+              "name": "message",
+              "value": "=Hi {{ $json.body.name }}, you are approximately {{ 2026 - $json.body.birth_year }} years old.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        224,
+        0
+      ],
+      "id": "37951f6b-c8d2-4d06-9663-6ae8c6cfe252",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        448,
+        0
+      ],
+      "id": "ab6bca26-1635-4391-8733-f5599f285ad0",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "d52ca72e-e50a-4710-9e02-b1513107a399",
+  "meta": {
+    "instanceId": "1936d67899c9fb61ebff34e08e8b3ad548b4884eb5c9509835183659c65047dd"
+  },
+  "nodeGroups": [],
+  "id": "v6JUmnjBD6n5JUhU",
+  "tags": []
+}

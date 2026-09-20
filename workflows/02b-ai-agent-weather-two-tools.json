@@ -1,0 +1,141 @@
+{
+  "name": "02b - AI Agent Weather (Two Tools)",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        -16,
+        -224
+      ],
+      "id": "87ddb9d9-12b3-4d2c-ba79-30d17b11000b",
+      "name": "When chat message received",
+      "webhookId": "d3b09af0-085c-4870-8939-80fd73124c7e"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        224,
+        -224
+      ],
+      "id": "5ea653a5-cf4a-43af-8ee7-c80492881d70",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        224,
+        -16
+      ],
+      "id": "7a48b860-2c4c-466f-94b1-b3373c47dee0",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "JQ5kF7kHIRse9B7L",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Get the latitude and longitude coordinates for a city name. Always use this tool first, before calling the weather tool.",
+        "url": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('URL', `The full Open-Meteo geocoding API URL for a city, e.g. https://geocoding-api.open-meteo.com/v1/search?name=Bratislava`, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.5,
+      "position": [
+        368,
+        -16
+      ],
+      "id": "2970a7ff-afeb-403c-9a85-1493691e1944",
+      "name": "Geocoding"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Get current weather data using latitude and longitude coordinates. Requires coordinates from the Geocoding tool — call that one first.",
+        "url": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('URL', `The full Open-Meteo weather forecast API URL using latitude and longitude, e.g. https://api.open-meteo.com/v1/forecast?latitude=48.15&longitude=17.11&current=temperature_2m,wind_speed_10m,weather_code`, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.5,
+      "position": [
+        480,
+        -16
+      ],
+      "id": "6ebb42f9-55a2-4726-b119-8e147f044acd",
+      "name": "Weather"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Geocoding": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Weather": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "779c19f5-dd9f-46c2-a85a-d1750f6960ff",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1936d67899c9fb61ebff34e08e8b3ad548b4884eb5c9509835183659c65047dd"
+  },
+  "nodeGroups": [],
+  "id": "R8T4PN8lSKYDbvK0",
+  "tags": []
+}

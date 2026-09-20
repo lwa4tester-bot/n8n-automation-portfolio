@@ -1,0 +1,115 @@
+{
+  "name": "02a - AI Agent Weather (Single Tool)",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        0,
+        0
+      ],
+      "id": "bfe81961-5dc1-4dbb-b893-68df2022aff0",
+      "name": "When chat message received",
+      "webhookId": "62f6c08d-bde1-4d62-a661-f0d668add9c4"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        240,
+        0
+      ],
+      "id": "0a36b310-2bfd-47dc-9612-2dadf5906b4f",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Use this tool to get current weather information for a city.",
+        "url": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('URL', `The full wttr.in URL to fetch weather for a specific city, e.g. https://wttr.in/Bratislava?format=j1`, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.5,
+      "position": [
+        400,
+        208
+      ],
+      "id": "fb28d96b-e421-47f8-87fc-f6bd4a99fdc7",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        208
+      ],
+      "id": "db5a5cf0-9120-4629-984d-001939c61cf3",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "JQ5kF7kHIRse9B7L",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "e0563e65-e050-4885-bba3-33b76a959726",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1936d67899c9fb61ebff34e08e8b3ad548b4884eb5c9509835183659c65047dd"
+  },
+  "nodeGroups": [],
+  "id": "b2U1fLOuKQ5BMpHA",
+  "tags": []
+}
