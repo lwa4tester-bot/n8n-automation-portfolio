@@ -1,0 +1,138 @@
+{
+  "name": "03 - AI Agent Memory",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        0,
+        0
+      ],
+      "id": "b05c7175-14d6-44af-b078-9553209c5db5",
+      "name": "When chat message received",
+      "webhookId": "7b9e1442-3666-426a-8c59-eb241f8cf400"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        224,
+        0
+      ],
+      "id": "5f056423-bb68-4744-a457-8de5e90b8440",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        224,
+        176
+      ],
+      "id": "14a37a75-192e-4c27-83b8-971e10f2ca18",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "JQ5kF7kHIRse9B7L",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        352,
+        224
+      ],
+      "id": "d325c075-f585-4260-9cd8-350dde069fbf",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Use this tool to get current weather information for a city.\n",
+        "url": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('URL', `The full wttr.in URL to fetch weather for a specific city, e.g. https://wttr.in/Bratislava?format=j1`, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.5,
+      "position": [
+        464,
+        192
+      ],
+      "id": "3381f8b2-5d95-455d-84de-ab732b8e9e2c",
+      "name": "Weather"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Weather": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "46815e91-57ea-42b3-9e7d-08db16c1d612",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1936d67899c9fb61ebff34e08e8b3ad548b4884eb5c9509835183659c65047dd"
+  },
+  "nodeGroups": [],
+  "id": "Epnv6JDveAsbdLKv",
+  "tags": []
+}
