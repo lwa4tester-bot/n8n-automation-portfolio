@@ -1,0 +1,257 @@
+{
+  "name": "04 - Multi-Agent Coordinator (Weather + Age)",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        0,
+        0
+      ],
+      "id": "ff916115-0fa3-49bd-826e-bdfc9bb02675",
+      "name": "When chat message received",
+      "webhookId": "d8de9358-cced-44e1-8574-cef3d810fd46"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        224,
+        0
+      ],
+      "id": "b7fc3e74-ac31-4ccc-83ab-a24bf5de6e78",
+      "name": "Coordinator"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        96,
+        208
+      ],
+      "id": "f610772a-22a2-4d01-ba03-51dd68a82872",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "JQ5kF7kHIRse9B7L",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "\"Use this agent for any question about current weather in a city.\"",
+        "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Prompt__User_Message_', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 3,
+      "position": [
+        384,
+        208
+      ],
+      "id": "85171f6c-a193-44ce-9dff-5928f74545cc",
+      "name": "Weather Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        256,
+        416
+      ],
+      "id": "62fd4b50-173c-4d15-af09-dce3e72e7da2",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "JQ5kF7kHIRse9B7L",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Use this agent to calculate someone's age from their birth year.",
+        "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Prompt__User_Message_', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 3,
+      "position": [
+        720,
+        208
+      ],
+      "id": "335e0a47-062f-4756-b6c1-6738cd7d9702",
+      "name": "Age Calculator Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        592,
+        416
+      ],
+      "id": "35240d40-6c41-4dbc-bba8-da03727775c3",
+      "name": "Google Gemini Chat Model2",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "JQ5kF7kHIRse9B7L",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Use this tool to get current weather information for a city.",
+        "url": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('URL', `The full wttr.in URL to fetch weather for a specific city, e.g. https://wttr.in/Bratislava?format=j1`, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.5,
+      "position": [
+        736,
+        400
+      ],
+      "id": "70b333a3-fcc7-4200-92e7-3f4a041d4d1f",
+      "name": "Weather"
+    },
+    {
+      "parameters": {
+        "description": "Use this tool to calculate someone's age from their birth year. Requires the person's name and birth year.",
+        "jsCode": "const name = $input.item.json.name;\nconst birth_year = $input.item.json.birth_year;\nconst age = 2026 - birth_year;\nreturn `${name} is approximately ${age} years old.`;",
+        "specifyInputSchema": true,
+        "jsonSchemaExample": "{\n    \"name\": \"Kristian\",\n    \"birth_year\": 1977\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1.3,
+      "position": [
+        880,
+        416
+      ],
+      "id": "d634c68c-e741-4c7a-a7c3-ced762e02f0e",
+      "name": "Code Tool"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Coordinator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Coordinator",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Weather Agent": {
+      "ai_tool": [
+        [
+          {
+            "node": "Coordinator",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Weather Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Age Calculator Agent": {
+      "ai_tool": [
+        [
+          {
+            "node": "Coordinator",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Age Calculator Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Weather": {
+      "ai_tool": [
+        [
+          {
+            "node": "Weather Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Age Calculator Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "3b2689e9-2a54-41c4-9c2f-debf068e208c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1936d67899c9fb61ebff34e08e8b3ad548b4884eb5c9509835183659c65047dd"
+  },
+  "nodeGroups": [],
+  "id": "ni1X3sqf6dF9l8Mp",
+  "tags": []
+}
