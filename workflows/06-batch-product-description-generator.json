@@ -1,0 +1,113 @@
+{
+  "name": "06 - Batch Product Description Generator",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "52d3399d-5e62-482c-a3ca-16f3066f89b9",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "jsCode": "const products = [\n  { name: \"Wireless Charging Pad\", price: 24.99, category: \"Electronics\" },\n  { name: \"Bamboo Cutting Board\", price: 18.50, category: \"Kitchen\" },\n  { name: \"Noise Cancelling Earbuds\", price: 89.99, category: \"Electronics\" },\n  { name: \"Ceramic Coffee Mug\", price: 12.00, category: \"Kitchen\" },\n  { name: \"Yoga Mat\", price: 32.00, category: \"Fitness\" }\n];\n\nreturn products.map(product => ({ json: product }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        0
+      ],
+      "id": "693bcb23-fc32-457b-9beb-6bbc0fbdcb7f",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Write exactly ONE short, catchy marketing sentence (max 20 words) for this product. Output ONLY the sentence itself, with no options, no formatting, no explanations.\n\nName: {{ $json.name }}\nPrice: ${{ $json.price }}\nCategory: {{ $json.category }}",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        448,
+        0
+      ],
+      "id": "01afc80f-18aa-4f28-96b5-c2c46096549c",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        448,
+        224
+      ],
+      "id": "53c979a3-4ddf-40a5-8c55-acd8e7f0ad44",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "JQ5kF7kHIRse9B7L",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "d405b1a1-6f72-486d-9e00-af92b97482a4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1936d67899c9fb61ebff34e08e8b3ad548b4884eb5c9509835183659c65047dd"
+  },
+  "nodeGroups": [],
+  "id": "6Gv9N94m8pnh93R1",
+  "tags": []
+}
