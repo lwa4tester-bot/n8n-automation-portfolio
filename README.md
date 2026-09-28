@@ -48,6 +48,10 @@
 
 # | 07 | Resilient Weather Agent (Error Handling) | HTTP-level error handling — branches on the HTTP Request node's error output (500 response) instead of relying on the LLM to detect and report failures |
 
+# | 08 | FODMAP Agent | RAG chat agent answering FODMAP-level questions via Pinecone retrieval, grounded to avoid hallucination.
+
+# | 08 | FODMAP Ingestion | Ingests a FODMAP knowledge base from Google Drive into Pinecone using markdown-aware chunking and Gemini embeddings.
+
 # 
 
 # Each workflow's exported JSON is in \[`workflows/`](./workflows).

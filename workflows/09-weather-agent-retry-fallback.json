@@ -1,0 +1,288 @@
+{
+  "name": "09 - Weather Agent - Retry Fallback",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        0,
+        0
+      ],
+      "id": "9906cf42-70d9-4f2f-a22e-f5ca8f16ab05",
+      "name": "When chat message received",
+      "webhookId": "c387b6ec-9dd2-4a3b-a55d-f6e54943d75b"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        224,
+        208
+      ],
+      "id": "d4a83c64-a027-4379-8ca8-b2750c4d51a9",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "JQ5kF7kHIRse9B7L",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Get current weather for a city using the wttr.in API. Given a city name, output the URL that starts with the domain wttr.in followed by a forward slash, the city name, and the query string format=j1. Output the URL exactly once, with no repetition and no explanation.",
+        "url": "=https://wttr.in/{{ $fromAI('city', 'the city name to get weather for', 'string') }}?format=j1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.5,
+      "position": [
+        384,
+        208
+      ],
+      "id": "59b8dd48-1fe8-44e3-a523-4efeace039ed",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        576,
+        448
+      ],
+      "id": "f92ec090-b996-4493-b8c5-8aea3faaa61c",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "JQ5kF7kHIRse9B7L",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Get the geographic coordinates (latitude and longitude) for a city name. Use this first, before calling the Weather tool, to convert the city name into coordinates. Input: city name.",
+        "url": "=https://geocoding-api.open-meteo.com/v1/search?name={{ $fromAI('city', 'the city name to search for', 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.5,
+      "position": [
+        768,
+        448
+      ],
+      "id": "d6b548d4-c3a7-4997-8d5e-f27a0ff1dc3e",
+      "name": "Open-Meteo Geocoding"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Get current weather (temperature, wind speed, weather code) using latitude and longitude coordinates. Use this AFTER the geocoding tool has provided the coordinates. Input: latitude and longitude.Makes an HTTP request and returns the response data",
+        "url": "=https://api.open-meteo.com/v1/forecast?latitude={{ $fromAI('latitude', 'latitude coordinate from the geocoding tool', 'string') }}&longitude={{ $fromAI('longitude', 'longitude coordinate from the geocoding tool', 'string') }}&current=temperature_2m,wind_speed_10m,weather_code",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.5,
+      "position": [
+        960,
+        480
+      ],
+      "id": "9426f881-4a90-44a8-be68-3ab435951271",
+      "name": "Weather (Forecast)"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "8fb0d5f6-d940-4fa6-8774-059fa55ae72b",
+              "leftValue": "={{ $json.output }}",
+              "rightValue": "TOOL_FAILED",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        592,
+        16
+      ],
+      "id": "17e014a9-b968-446f-ae86-760243d21d68",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "If the weather tool fails or returns an error after retries, do NOT apologize or respond to the user directly — instead, this must be treated as a workflow-level failure. If the weather tool fails and cannot return data even after retries, do not write an apology or explanation to the user. Instead, respond with exactly this text and nothing else: TOOL_FAILED"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        224,
+        0
+      ],
+      "id": "8c637895-4c3f-4e2e-8c18-a3c64cc6114b",
+      "name": "Weather Agent (Primary - wttr.in)",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 5000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('When chat message received').item.json.chatInput }}",
+        "options": {
+          "systemMessage": "You are a weather assistant. To answer weather questions, first use the geocoding tool to find the latitude and longitude for the city name. Then use those coordinates with the weather tool to get the current weather. Always respond with the temperature, wind speed, and a short description of the conditions.\""
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        720,
+        176
+      ],
+      "id": "746e483b-a8ce-41e3-9a5d-a1a1c2f45f81",
+      "name": "Weather Agent (Fallback - Open-Meteo)",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 5000
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Weather Agent (Primary - wttr.in)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Weather Agent (Primary - wttr.in)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "ai_tool": [
+        [
+          {
+            "node": "Weather Agent (Primary - wttr.in)",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Weather Agent (Fallback - Open-Meteo)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Open-Meteo Geocoding": {
+      "ai_tool": [
+        [
+          {
+            "node": "Weather Agent (Fallback - Open-Meteo)",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Weather (Forecast)": {
+      "ai_tool": [
+        [
+          {
+            "node": "Weather Agent (Fallback - Open-Meteo)",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Weather Agent (Fallback - Open-Meteo)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Weather Agent (Primary - wttr.in)": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Weather Agent (Fallback - Open-Meteo)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "0db01fdc-f09b-468a-ade8-2dd039bb45f7",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1936d67899c9fb61ebff34e08e8b3ad548b4884eb5c9509835183659c65047dd"
+  },
+  "nodeGroups": [],
+  "id": "KcKqW1TW9uNwvles",
+  "tags": []
+}
