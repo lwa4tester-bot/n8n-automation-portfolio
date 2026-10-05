@@ -1,0 +1,144 @@
+{
+  "name": "11 - Ticket Classifier - Structured Output",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "4fa99f55-a5f9-43ad-a337-92047cad7272",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "4160d1be-4d4d-480d-be14-9f517c4054fe",
+      "name": "Webhook",
+      "webhookId": "4fa99f55-a5f9-43ad-a337-92047cad7272"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Classify the following support ticket.\n\nAllowed categories: billing, technical, account, other\nAllowed priorities: low, medium, high\n\nExample:\nMessage: I don't know the password\nCategory: account\nPriority: high\n\nMessage: I lost my invoice number.\nCategory: billing\nPriority: medium\n\nMessage: What will be the weather tomorrow?\nCategory: other\nPriority: low\n\nMessage: The webpage gave me 404 error\nCategory: technical\nPriority: medium\n\nTicket message:\n{{ $json.body.message }}",
+        "hasOutputParser": true,
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        224,
+        0
+      ],
+      "id": "e606047e-3b83-451b-aee3-fd7cdf6534e6",
+      "name": "Basic LLM Chain1"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        232,
+        232
+      ],
+      "id": "b6dfa72c-b76f-4d50-92d4-713783808e47",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "JQ5kF7kHIRse9B7L",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"category\": \"billing\",\n  \"priority\": \"low\",\n  \"summary\": \"Customer asks about an invoice.\",\n  \"language\": \"English\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        360,
+        232
+      ],
+      "id": "5de872dc-e3c6-4616-b66a-913892e0b542",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        576,
+        0
+      ],
+      "id": "e70a54ee-1f0f-44ea-adee-afdc9e53c42f",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "e79b2ddd-9413-459b-bf65-4933ab9251a9",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1936d67899c9fb61ebff34e08e8b3ad548b4884eb5c9509835183659c65047dd"
+  },
+  "nodeGroups": [],
+  "id": "2vqbrkY3CAZYyjIe",
+  "tags": []
+}

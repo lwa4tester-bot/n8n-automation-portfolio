@@ -1,6 +1,6 @@
 # n8n-automation-portfolio
 
-A collection of n8n workflows built while learning AI agent development — covering triggers, AI Agents with tools, memory, multi-agent coordination, human-in-the-loop patterns, batch processing, RAG, error handling, and retry/fallback resilience.
+A collection of n8n workflows built while learning AI agent development — covering triggers, AI Agents with tools, memory, multi-agent coordination, human-in-the-loop patterns, batch processing, RAG, structured output, error handling, and retry/fallback resilience.
 
 Built as a practice track alongside a Udemy course on RAG agents and n8n automation, as preparation for AI Agent Developer roles.
 
@@ -28,6 +28,7 @@ Built as a practice track alongside a Udemy course on RAG agents and n8n automat
 | 08b | FODMAP Ingestion | Ingests a FODMAP knowledge base from Google Drive into Pinecone using markdown-aware chunking and Gemini embeddings |
 | 09 | Weather Agent – Retry & Fallback | Primary agent (wttr.in) with Retry On Fail, error-output routing and a sentinel check that hands over to a fallback agent (Open-Meteo) when the primary fails |
 | 10 | Modular Weather Agent (Sub-workflow) | Splitting API logic into a reusable sub-workflow called via the Call n8n Workflow Tool node |
+| 11 | Ticket Classifier – Structured Output | Webhook + Basic LLM Chain with a Structured Output Parser returning consistent JSON (category, priority, summary, language), sent back to the caller via Respond to Webhook |
 
 Each workflow's exported JSON is in [`workflows/`](./workflows).
 
@@ -38,6 +39,14 @@ Each workflow's exported JSON is in [`workflows/`](./workflows).
 Two separate workflows: `Weather Tool (Sub)` (an `Execute Workflow Trigger` → HTTP Request to wttr.in → Edit Fields, returning just `temp` and `description`) and `Weather Agent (Main)` (Chat Trigger → AI Agent → Gemini, with the sub-workflow attached as its only Tool via `Call n8n Workflow Tool`). The main workflow contains no HTTP Request node at all — every API call lives in the sub-workflow.
 
 Tested: a normal weather question answers correctly, an unrelated question ("What is 2+2?") does not trigger the tool, and an invalid city name is correctly reported as not found rather than hallucinated.
+
+### Workflow 11 details
+
+**File:** [`11-ticket-classifier-structured-output.json`](./workflows/11-ticket-classifier-structured-output.json)
+
+Webhook (POST, `{"message": "..."}`) → Basic LLM Chain (Gemini) with a Structured Output Parser → Respond to Webhook, which returns `{category, priority, summary, language}` to the caller. The prompt contains the allowed values and four few-shot examples.
+
+Tested with four messages: a Hungarian billing question, an English technical issue, a Slovak question and a nonsense string. All returned valid JSON; the Slovak message was labeled `cs` instead of `sk`.
 
 ## Key learnings
 
@@ -51,6 +60,9 @@ Tested: a normal weather question answers correctly, an unrelated question ("Wha
 - **A fallback agent needs an explicit prompt.** Data arriving through an IF node does not carry the original `chatInput`, so the fallback agent's prompt is defined explicitly from the Chat Trigger.
 - **Test every path, not just the happy one.** Normal run, tool failure and model failure each exercise a different branch. A small trap found along the way: in a Fixed-mode IF value, quotation marks become part of the compared string.
 - **Sub-workflows must be published/active.** A workflow called via `Call n8n Workflow Tool` fails with "Workflow is not active and cannot be executed" until it's explicitly published, even though it's only ever triggered by another workflow, never directly.
+- **Structured Output Parser makes LLM output machine-readable.** Free text is hard for the next node to process; a fixed JSON schema (category, priority, summary, language) can be passed on to an IF node, a sheet or another workflow without guessing.
+- **A valid structure is not the same as correct content.** In task 11 a Slovak message was labeled `cs` (Czech), and a nonsense message still got a made-up language. The output was valid JSON both times, so the parser cannot catch wrong values.
+- **Respond to Webhook: use *First Incoming Item* for object output.** With *Respond With = JSON* and an object in the body, the caller got an empty response.
 
 ## Setup
 
