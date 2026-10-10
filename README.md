@@ -29,6 +29,7 @@ Built as a practice track alongside a Udemy course on RAG agents and n8n automat
 | 09 | Weather Agent – Retry & Fallback | Primary agent (wttr.in) with Retry On Fail, error-output routing and a sentinel check that hands over to a fallback agent (Open-Meteo) when the primary fails |
 | 10 | Modular Weather Agent (Sub-workflow) | Splitting API logic into a reusable sub-workflow called via the Call n8n Workflow Tool node |
 | 11 | Ticket Classifier – Structured Output | Webhook + Basic LLM Chain with a Structured Output Parser returning consistent JSON (category, priority, summary, language), sent back to the caller via Respond to Webhook |
+| 12 | Daily News Digest (Schedule + RSS) | Schedule Trigger + RSS Read → Limit → Basic LLM Chain (Gemini) that summarizes each Slovak news item in Hungarian → Aggregate + Edit Fields, producing one combined digest text |
 
 Each workflow's exported JSON is in [`workflows/`](./workflows).
 
@@ -48,6 +49,14 @@ Webhook (POST, `{"message": "..."}`) → Basic LLM Chain (Gemini) with a Structu
 
 Tested with four messages: a Hungarian billing question, an English technical issue, a Slovak question and a nonsense string. All returned valid JSON; the Slovak message was labeled `cs` instead of `sk`.
 
+### Workflow 12 details
+
+**File:** [`12-daily-news-digest.json`](./workflows/12-daily-news-digest.json)
+
+Schedule Trigger (daily, 07:00) and a Manual Trigger (for testing) → RSS Read (SME.sk feed, 23 items) → Limit (first 5) → Basic LLM Chain (Gemini) that writes a two-sentence Hungarian summary of each Slovak item → Edit Fields (`line` = title + summary + link) → Aggregate → Edit Fields (`digest`, lines joined with a line break). The result is one text field containing all five news items. *Retry On Fail* is enabled on the RSS Read node and on the Basic LLM Chain.
+
+Tested by manual execution: five Slovak news items came back as five Hungarian summaries, each matched to the correct title and link. The Schedule Trigger itself was configured but not tested on a live schedule.
+
 ## Key learnings
 
 - **Don't rely on the LLM to detect failures it wasn't designed to detect.** In task 07, an AI Agent correctly recognized an invalid city name and replied sensibly — but that was luck, not a guarantee. Moving the error handling to the HTTP Request node's error output makes the behavior deterministic instead of dependent on the model's judgment call.
@@ -63,6 +72,11 @@ Tested with four messages: a Hungarian billing question, an English technical is
 - **Structured Output Parser makes LLM output machine-readable.** Free text is hard for the next node to process; a fixed JSON schema (category, priority, summary, language) can be passed on to an IF node, a sheet or another workflow without guessing.
 - **A valid structure is not the same as correct content.** In task 11 a Slovak message was labeled `cs` (Czech), and a nonsense message still got a made-up language. The output was valid JSON both times, so the parser cannot catch wrong values.
 - **Respond to Webhook: use *First Incoming Item* for object output.** With *Respond With = JSON* and an object in the body, the caller got an empty response.
+- **Pinned test data goes stale.** Pinned LLM output stopped matching the live RSS titles a few days later, so pin all upstream nodes together or unpin before judging a result.
+- **A chat model sub-node has no *Retry On Fail* setting.** Set it on the parent Basic LLM Chain, with a wait of 5 s or more for Gemini 503 errors.
+- **A chain's output only contains its own fields.** Title and link come from the earlier Limit node via `$('Limit').item.json...`.
+- **Fixed vs. Expression mode.** A hand-typed value can stay in Fixed mode and be read as plain text, so switch it to Expression.
+- **Limit keeps the first N items in feed order.** It gives the latest news only if the feed is sorted newest-first, otherwise add a Sort node.
 
 ## Setup
 
